@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Gate Garments HR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .login-card p {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        .form-control {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            color: #fff;
+        }
+
+        .form-control::placeholder {
+            color: #ddd;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: #00c6ff;
+            background: linear-gradient(to right, #0072ff, #00c6ff);
+            font-weight: 600;
+            transition: 0.3s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .error-box {
+            background: rgba(255, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        @media(max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>Gate Garments</h2>
+        <p>HR Management System</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="error-box">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <input type="text" name="username" class="form-control" placeholder="Employee ID" required>
+                {% if form.username.errors %}
+                    <div class="error-box mt-2">
+                        {{ form.username.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control" placeholder="Password (use Employee ID)" required>
+                {% if form.password.errors %}
+                    <div class="error-box mt-2">
+                        {{ form.password.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-login text-white">
+                Login
+            </button>
+        </form>
+
+        <div class="footer-text">
+            © 2026 Gate Garments. All rights reserved.
+        </div>
+    </div>
+
+</body>
+</html>

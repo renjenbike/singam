@@ -1,0 +1,183 @@
+{% extends "gate/base.html" %}
+
+{% block title %}My Daily Salary Slips - Gate Garments HR{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="page-title">
+            <i class="fas fa-file-invoice-dollar"></i> My Daily Salary Slips
+        </h2>
+    </div>
+</div>
+
+<!-- Month Selection -->
+<div class="row mb-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label for="month" class="form-label">Select Month & Year</label>
+                        <div class="input-group">
+                            <select name="month" id="month" class="form-select">
+                                {% for m in "123456789101112"|make_list %}
+                                    <option value="{{ m|add:0 }}" {% if m|add:0 == month %}selected{% endif %}>
+                                        {{ "January,February,March,April,May,June,July,August,September,October,November,December"|split:",")|add:0|slice:m-1:m|first }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <input type="number" name="year" class="form-control" value="{{ year }}" min="2020" max="2099" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> View Slips
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Card -->
+{% if salary_structure %}
+<div class="row mb-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <p class="text-muted mb-2">Monthly Gross Salary</p>
+                        <div class="stat-number">₹{{ salary_structure.gross_salary|floatformat:2 }}</div>
+                        <small class="text-muted">Per Month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <p class="text-muted mb-2">Daily Salary</p>
+                        <div class="stat-number">₹{{ daily_salary }}</div>
+                        <small class="text-muted">Per Day (Gross ÷ 30)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Accumulated Salary -->
+<div class="row mb-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="alert alert-success" role="alert">
+            <h5 class="mb-2">
+                <i class="fas fa-calculator"></i> Accumulated Salary for {{ month_name }} {{ year }}
+            </h5>
+            <h3 class="mb-0">₹{{ total_monthly_salary|floatformat:2 }}</h3>
+            <small class="text-muted">
+                ({{ daily_salary_slips|length }} days × ₹{{ daily_salary|default:0|floatformat:2 }})
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Salary Slips Table -->
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Daily Salary Slips - {{ month_name }} {{ year }}</h5>
+            </div>
+            
+            {% if daily_salary_slips %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Attendance Status</th>
+                            <th>Check-In Time</th>
+                            <th>Daily Salary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slip in daily_salary_slips %}
+                        <tr>
+                            <td>
+                                <strong>{{ slip.date|date:"d M Y" }}</strong><br>
+                                <small class="text-muted">{{ slip.date|date:"l" }}</small>
+                            </td>
+                            <td>
+                                {% if slip.attendance %}
+                                    {% if slip.attendance.status == 'P' %}
+                                        <span class="badge bg-success">Present</span>
+                                    {% elif slip.attendance.status == 'A' %}
+                                        <span class="badge bg-danger">Absent</span>
+                                    {% elif slip.attendance.status == 'L' %}
+                                        <span class="badge bg-warning">Leave</span>
+                                    {% elif slip.attendance.status == 'H' %}
+                                        <span class="badge bg-info">Half Day</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ slip.attendance.get_status_display }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if slip.attendance and slip.attendance.check_in_time %}
+                                    <i class="fas fa-check text-success"></i> {{ slip.attendance.check_in_time|time:"H:i" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-primary">₹{{ slip.daily_salary|floatformat:2 }}</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card-footer bg-light">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Total Records: <strong>{{ daily_salary_slips|length }}</strong></small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small class="text-muted">Total Amount: <strong class="text-success">₹{{ total_monthly_salary|floatformat:2 }}</strong></small>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>No salary slips found</strong> for {{ month_name }} {{ year }}.
+                    You will receive a daily salary slip each time you check in to the system.
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mt-4">
+    <div class="col-lg-10 mx-auto">
+        <a href="{% url 'employee_salary_structure' %}" class="btn btn-outline-primary">
+            <i class="fas fa-receipt"></i> View Salary Structure
+        </a>
+        <a href="{% url 'employee_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-home"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% endblock %}

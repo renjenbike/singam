@@ -1,0 +1,570 @@
+{% extends "gate/base.html" %}
+{% load static %}
+
+{% block title %}Employee Dashboard - Gate Garments HR{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="page-title">
+            <i class="fas fa-user-circle"></i> Welcome, {{ user.first_name|default:user.username }}!
+        </h2>
+    </div>
+</div>
+
+<!-- Check-In / Check-Out Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card checkin-card">
+            <div class="card-body text-center">
+                <h4 class="mb-4"><i class="fas fa-clock"></i> Today's Attendance</h4>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="checkin-time-display">
+                            {% if has_checked_in %}
+                                <p class="text-success mb-2">
+                                    <i class="fas fa-check-circle fa-3x"></i>
+                                </p>
+                                <p class="text-success"><strong>Checked In</strong></p>
+                                <p class="text-muted">{{ today_attendance.check_in_time|time:"H:i:s" }}</p>
+                            {% else %}
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-arrow-right fa-3x" style="color: #ddd;"></i>
+                                </p>
+                                <p class="text-muted"><strong>Not Checked In</strong></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="checkout-time-display">
+                            {% if has_checked_out %}
+                                <p class="text-danger mb-2">
+                                    <i class="fas fa-times-circle fa-3x"></i>
+                                </p>
+                                <p class="text-danger"><strong>Checked Out</strong></p>
+                                <p class="text-muted">{{ today_attendance.check_out_time|time:"H:i:s" }}</p>
+                            {% else %}
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-arrow-left fa-3x" style="color: #ddd;"></i>
+                                </p>
+                                <p class="text-muted"><strong>Not Checked Out</strong></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <button class="btn btn-success btn-lg w-100 check-in-btn" 
+                                id="checkinBtn" 
+                                {% if has_checked_in %}disabled{% endif %}>
+                            <i class="fas fa-sign-in-alt"></i> CHECK IN
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-danger btn-lg w-100 check-out-btn" 
+                                id="checkoutBtn" 
+                                {% if not has_checked_in or has_checked_out %}disabled{% endif %}>
+                            <i class="fas fa-sign-out-alt"></i> CHECK OUT
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Status Message -->
+                <div id="statusMessage" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Present Days</p>
+                        <div class="stat-number">{{ present_count }}</div>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x text-success opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Absent Days</p>
+                        <div class="stat-number" style="color: #e74c3c;">{{ absent_count }}</div>
+                    </div>
+                    <i class="fas fa-times-circle fa-2x text-danger opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Leave Days</p>
+                        <div class="stat-number" style="color: #f39c12;">{{ leave_count }}</div>
+                    </div>
+                    <i class="fas fa-calendar-check fa-2x text-warning opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Total Attendance</p>
+                        <div class="stat-number">{{ total_attendance }}</div>
+                    </div>
+                    <i class="fas fa-file-alt fa-2x text-info opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Salary Section -->
+{% if salary_structure %}
+<div class="row mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Monthly Gross Salary</p>
+                        <div class="stat-number" style="color: #27ae60; font-size: 1.8rem;">₹{{ salary_structure.gross_salary|floatformat:0 }}</div>
+                    </div>
+                    <i class="fas fa-money-bill fa-2x text-success opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Daily Salary</p>
+                        {% with daily_salary=salary_structure.gross_salary|add:0|divisibleby:30 %}
+                        <div class="stat-number" style="color: #3498db; font-size: 1.8rem;">₹{{ salary_structure.gross_salary|floatformat:0|add:0 }}</div>
+                        {% endwith %}
+                        <small class="text-muted">Per day (÷ 30)</small>
+                    </div>
+                    <i class="fas fa-calendar-day fa-2x text-info opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">Today's Salary</p>
+                        <div class="stat-number" style="color: #f39c12; font-size: 1.8rem;">₹{{ today_salary|floatformat:0 }}</div>
+                        <small class="text-muted">{% if today_salary > 0 %}<i class="fas fa-check text-success"></i> Earned{% else %}Not earned yet{% endif %}</small>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x text-warning opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted">This Month (So Far)</p>
+                        <div class="stat-number" style="color: #9b59b6; font-size: 1.8rem;">₹{{ monthly_accumulated_salary|floatformat:0 }}</div>
+                        <small class="text-muted">{{ monthly_salary_slips|length }} days</small>
+                    </div>
+                    <i class="fas fa-chart-bar fa-2x opacity-25" style="color: #9b59b6;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Profile Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>Logged in as: <strong>{{ user.first_name|default:user.username }}</strong></h5>
+                    <p class="text-muted mb-0">Employee Account</p>
+                </div>
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row">
+    <!-- Daily Salary Slips -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-file-invoice-dollar"></i> Recent Daily Salary Slips
+            </div>
+            <div class="card-body">
+                {% if monthly_salary_slips %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Daily Salary</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for slip in monthly_salary_slips|dictsort:"-date"|slice:":5" %}
+                                <tr>
+                                    <td><strong>{{ slip.date|date:"d M" }}</strong></td>
+                                    <td>
+                                        {% if slip.attendance %}
+                                            {% if slip.attendance.status == 'P' %}
+                                                <span class="badge bg-success">Present</span>
+                                            {% elif slip.attendance.status == 'A' %}
+                                                <span class="badge bg-danger">Absent</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ slip.attendance.get_status_display }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong class="text-success">₹{{ slip.daily_salary|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'employee_daily_salary_slips' %}" class="btn btn-sm btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> View All Daily Slips
+                    </a>
+                {% else %}
+                    <p class="text-muted text-center py-3">No daily salary slips yet. Check in to earn daily salary!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Leaves -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-calendar-check"></i> Pending Leave Requests
+            </div>
+            <div class="card-body">
+                {% if pending_leaves %}
+                    <div class="list-group">
+                        {% for leave in pending_leaves %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ leave.get_leave_type_display }}</h6>
+                                    <p class="mb-1 small text-muted">
+                                        {{ leave.start_date }} to {{ leave.end_date }}
+                                        ({{ leave.number_of_days }} days)
+                                    </p>
+                                    <p class="mb-0 small">{{ leave.reason|truncatewords:10 }}</p>
+                                </div>
+                                <span class="badge" style="background-color: #ffc107; color: white;">Pending</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'leave_list' %}" class="btn btn-sm btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> View All Leaves
+                    </a>
+                {% else %}
+                    <p class="text-muted text-center py-3">No pending leaves</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Original Recent Payroll and Pending Leaves Section (for reference) -->
+<div class="row" style="display: none;">
+    <!-- Recent Payroll -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-receipt"></i> Recent Payroll
+            </div>
+            <div class="card-body">
+                {% if payroll_records %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Gross</th>
+                                    <th>Deductions</th>
+                                    <th>Net</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in payroll_records %}
+                                <tr>
+                                    <td><strong>{{ record.payroll_month.month }}</strong></td>
+                                    <td>₹{{ record.gross_salary|floatformat:2 }}</td>
+                                    <td>₹{{ record.total_deductions|floatformat:2 }}</td>
+                                    <td>
+                                        <strong class="text-success">₹{{ record.net_salary|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'payroll_records' %}" class="btn btn-sm btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> View All Salary Slips
+                    </a>
+                {% else %}
+                    <p class="text-muted text-center py-3">No payroll records yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Leaves -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-calendar-check"></i> Pending Leave Requests
+            </div>
+            <div class="card-body">
+                {% if pending_leaves %}
+                    <div class="list-group">
+                        {% for leave in pending_leaves %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ leave.get_leave_type_display }}</h6>
+                                    <p class="mb-1 small text-muted">
+                                        {{ leave.start_date }} to {{ leave.end_date }}
+                                        ({{ leave.number_of_days }} days)
+                                    </p>
+                                    <p class="mb-0 small">{{ leave.reason|truncatewords:10 }}</p>
+                                </div>
+                                <span class="badge" style="background-color: #ffc107; color: white;">Pending</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'leave_list' %}" class="btn btn-sm btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> View All Leaves
+                    </a>
+                {% else %}
+                    <p class="text-muted text-center py-3">No pending leaves</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-bolt"></i> Quick Actions
+            </div>
+            <div class="card-body">
+                <div class="btn-group-vertical w-100" role="group">
+                    <a href="{% url 'attendance_calendar_current' %}" class="btn btn-light text-start" style="border-bottom: 1px solid #dee2e6;">
+                        <i class="fas fa-calendar-alt me-3 text-primary"></i> View My Attendance Calendar
+                    </a>
+                    <a href="{% url 'leave_request' %}" class="btn btn-light text-start" style="border-bottom: 1px solid #dee2e6;">
+                        <i class="fas fa-plus-circle me-3 text-success"></i> Request Leave
+                    </a>
+                    <a href="{% url 'payroll_records' %}" class="btn btn-light text-start">
+                        <i class="fas fa-file-invoice-dollar me-3 text-warning"></i> View Salary Slips
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInBtn = document.getElementById('checkinBtn');
+    const checkOutBtn = document.getElementById('checkoutBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    
+    // Check-In Button Handler
+    if (checkInBtn) {
+        checkInBtn.addEventListener('click', function() {
+            checkInBtn.disabled = true;
+            statusMessage.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+            
+            fetch('{% url "employee_checkin" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusMessage.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${data.message}</div>`;
+                    checkInBtn.disabled = true;
+                    checkOutBtn.disabled = false;
+                    // Update check-in time display
+                    document.querySelector('.checkin-time-display').innerHTML = `
+                        <p class="text-success mb-2"><i class="fas fa-check-circle fa-3x"></i></p>
+                        <p class="text-success"><strong>Checked In</strong></p>
+                        <p class="text-muted">${data.check_in_time}</p>
+                    `;
+                    setTimeout(() => location.reload(), 1500);
+                } else if (data.status === 'warning') {
+                    statusMessage.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+                    checkInBtn.disabled = true;
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    statusMessage.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> ${data.message}</div>`;
+                    checkInBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                statusMessage.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ${error.message}</div>`;
+                checkInBtn.disabled = false;
+            });
+        });
+    }
+    
+    // Check-Out Button Handler
+    if (checkOutBtn) {
+        checkOutBtn.addEventListener('click', function() {
+            checkOutBtn.disabled = true;
+            statusMessage.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+            
+            fetch('{% url "employee_checkout" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusMessage.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${data.message}<br><small>Working Hours: ${data.working_hours}</small></div>`;
+                    checkOutBtn.disabled = true;
+                    // Update check-out time display
+                    document.querySelector('.checkout-time-display').innerHTML = `
+                        <p class="text-danger mb-2"><i class="fas fa-times-circle fa-3x"></i></p>
+                        <p class="text-danger"><strong>Checked Out</strong></p>
+                        <p class="text-muted">${data.check_out_time}</p>
+                    `;
+                    setTimeout(() => location.reload(), 1500);
+                } else if (data.status === 'warning') {
+                    statusMessage.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+                    checkOutBtn.disabled = false;
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    statusMessage.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> ${data.message}</div>`;
+                    checkOutBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                statusMessage.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ${error.message}</div>`;
+                checkOutBtn.disabled = false;
+            });
+        });
+    }
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+
+<style>
+.checkin-card {
+    border: 2px solid #27ae60;
+    background: linear-gradient(135deg, #f8fdf9 0%, #ffffff 100%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.checkin-time-display, .checkout-time-display {
+    padding: 15px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.check-in-btn:not(:disabled) {
+    background-color: #27ae60;
+    border-color: #27ae60;
+    transition: all 0.3s ease;
+}
+
+.check-in-btn:not(:disabled):hover {
+    background-color: #229954;
+    border-color: #229954;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(39, 174, 96, 0.4);
+}
+
+.check-out-btn:not(:disabled) {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    transition: all 0.3s ease;
+}
+
+.check-out-btn:not(:disabled):hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(231, 76, 60, 0.4);
+}
+
+.check-in-btn:disabled, .check-out-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}
