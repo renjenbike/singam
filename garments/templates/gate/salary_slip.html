@@ -62,8 +62,8 @@
                     <div class="row text-center">
                         <div class="col-6 col-md-3">
                             <div class="p-2 bg-light rounded">
-                                <p class="mb-1 small text-muted">Working Days</p>
-                                <p class="mb-0 fw-bold">{{ payroll_record.working_days }}</p>
+                                <p class="mb-1 small text-muted">Total Days in Month</p>
+                                <p class="mb-0 fw-bold">{{ total_days_in_month }}</p>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
@@ -167,11 +167,38 @@
                     </div>
                 </div>
 
-                <!-- Net Salary -->
+                <!-- Salary Calculation Based on Attendance -->
+                <div class="mb-4">
+                    <h6 class="mb-3 text-info">SALARY CALCULATION</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td>Monthly Net Salary</td>
+                                    <td class="text-end">₹{{ payroll_record.net_salary|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Per Day Salary (Net Salary ÷ Total Days)</td>
+                                    <td class="text-end">₹{{ per_day_salary|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Present Days</td>
+                                    <td class="text-end">{{ payroll_record.present_days }}</td>
+                                </tr>
+                                <tr class="fw-bold border-top">
+                                    <td>Final Payable Salary (Per Day × Present Days)</td>
+                                    <td class="text-end text-success">₹{{ final_payable_salary|floatformat:2 }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Final Payable Salary -->
                 <div class="mb-4 p-3 bg-light rounded">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">NET SALARY (Take Home)</h5>
-                        <h3 class="mb-0 text-success">₹{{ payroll_record.net_salary|floatformat:2 }}</h3>
+                        <h5 class="mb-0">FINAL PAYABLE SALARY (Based on Attendance)</h5>
+                        <h3 class="mb-0 text-success">₹{{ final_payable_salary|floatformat:2 }}</h3>
                     </div>
                 </div>
 

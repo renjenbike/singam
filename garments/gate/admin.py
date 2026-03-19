@@ -148,7 +148,7 @@ class PayrollMonthAdmin(admin.ModelAdmin):
 
 @admin.register(PayrollRecord)
 class PayrollRecordAdmin(admin.ModelAdmin):
-    list_display = ('employee', 'payroll_month', 'gross_salary_display', 'total_deductions_display', 'net_salary_display')
+    list_display = ('employee', 'payroll_month', 'gross_salary_display', 'total_deductions_display', 'final_payable_salary_display')
     list_filter = ('payroll_month', 'employee__department')
     search_fields = ('employee__first_name', 'employee__last_name', 'employee__employee_id')
     fieldsets = (
@@ -184,11 +184,18 @@ class PayrollRecordAdmin(admin.ModelAdmin):
             obj.net_salary
         )
     net_salary_display.short_description = 'Net Salary'
+    
+    def final_payable_salary_display(self, obj):
+        return format_html(
+            '<strong style="color: blue;">₹{:,.2f}</strong><br><small style="color: gray;">(Attendance-based)</small>',
+            obj.final_payable_salary
+        )
+    final_payable_salary_display.short_description = 'Final Salary'
 
 
 @admin.register(SalarySlip)
 class SalarySlipAdmin(admin.ModelAdmin):
-    list_display = ('slip_number', 'employee_name', 'month', 'net_salary_display', 'pdf_status', 'issue_date')
+    list_display = ('slip_number', 'employee_name', 'month', 'final_payable_salary_display', 'pdf_status', 'issue_date')
     list_filter = ('issue_date', 'payroll_record__payroll_month')
     search_fields = ('slip_number', 'payroll_record__employee__employee_id')
     readonly_fields = ('created_at', 'updated_at', 'slip_number', 'payroll_record')
@@ -204,6 +211,10 @@ class SalarySlipAdmin(admin.ModelAdmin):
     def net_salary_display(self, obj):
         return f"₹{obj.payroll_record.net_salary:,.2f}"
     net_salary_display.short_description = 'Net Salary'
+    
+    def final_payable_salary_display(self, obj):
+        return f"₹{obj.payroll_record.final_payable_salary:,.2f}"
+    final_payable_salary_display.short_description = 'Final Salary'
     
     def pdf_status(self, obj):
         if obj.pdf_generated:

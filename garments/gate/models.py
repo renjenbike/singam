@@ -304,6 +304,16 @@ class PayrollRecord(models.Model):
         
         return self.net_salary
     
+    @property
+    def final_payable_salary(self):
+        """Calculate final salary based on attendance"""
+        import calendar
+        year, month = map(int, self.payroll_month.month.split('-'))
+        total_days_in_month = calendar.monthrange(year, month)[1]
+        per_day_salary = self.net_salary / total_days_in_month
+        final_salary = per_day_salary * self.present_days
+        return round(final_salary, 2)
+    
     class Meta:
         verbose_name_plural = "Payroll Records"
         unique_together = ('employee', 'payroll_month')

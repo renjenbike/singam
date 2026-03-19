@@ -78,7 +78,8 @@
                             <td>₹{{ record.gross_salary|floatformat:2 }}</td>
                             <td>₹{{ record.total_deductions|floatformat:2 }}</td>
                             <td>
-                                <strong class="text-success">₹{{ record.net_salary|floatformat:2 }}</strong>
+                                <strong class="text-success">₹{{ record.final_payable_salary|floatformat:2 }}</strong>
+                                <br><small class="text-muted">(Based on attendance)</small>
                             </td>
                             <td>
                                 {% if record.salary_slip %}
