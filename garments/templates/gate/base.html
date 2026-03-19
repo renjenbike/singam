@@ -10,10 +10,14 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
         :root {
-            --primary: #1e3c72;
+            --primary-color: #1e3c72;
             --primary-dark: #0f1f3c;
             --primary-light: #2d5fa3;
-            --secondary: #00d4ff;
+            --secondary-color: #00d4ff;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
         }
 
         .dashboard-card {
@@ -85,6 +89,13 @@
 
         .badge-info {
             background-color: var(--info-color);
+            color: white;
+        }
+
+        .badge-info:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+            border: 1px solid rgba(59, 130, 246, 0.5);
         }
 
         .footer {
@@ -184,9 +195,6 @@
                         </a>
                         <a class="nav-link" href="{% url 'leave_list' %}">
                             <i class="fas fa-calendar-check"></i> Leave Requests
-                        </a>
-                        <a class="nav-link" href="{% url 'salary_structure' %}">
-                            <i class="fas fa-receipt"></i> Salary Slip (Daily Info)
                         </a>
                         <a class="nav-link" href="{% url 'payroll_processing' %}">
                             <i class="fas fa-calculator"></i> Process Payroll

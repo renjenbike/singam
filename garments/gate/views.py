@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 from calendar import monthcalendar, month_name
+from decimal import Decimal
 import calendar
 
 from .models import (
@@ -639,12 +640,34 @@ def payroll_processing(request):
         year = request.POST.get('year')
         
         # Convert to proper types
-        month_str = str(month).zfill(2)
+        month_int = int(month)
         year_int = int(year)
         
+        # Determine the month boundaries
+        from datetime import date, timedelta
+        month_start = date(year_int, month_int, 1)
+        if month_int == 12:
+            month_end = date(year_int + 1, 1, 1) - timedelta(days=1)
+        else:
+            month_end = date(year_int, month_int + 1, 1) - timedelta(days=1)
+
+        # Ensure payroll is processed only after the month is complete
+        today = date.today()
+        if month_end > today:
+            from django.contrib import messages
+            messages.error(
+                request,
+                f"Payroll can only be processed after the selected month is complete (after {month_end})."
+            )
+            context = {
+                'months': range(1, 13),
+                'current_year': datetime.now().year,
+            }
+            return render(request, 'gate/payroll_processing.html', context)
+
         # Create or get payroll month
         payroll_month, created = PayrollMonth.objects.get_or_create(
-            month=f"{year_int}-{month_str}",
+            month=f"{year_int}-{str(month_int).zfill(2)}",
             year=year_int,
             defaults={'status': 'DRAFT'}
         )
@@ -654,14 +677,7 @@ def payroll_processing(request):
         
         # Calculate working days for the month (all days except Sundays and company holidays)
         from calendar import monthrange
-        from datetime import date, timedelta
-        month_start = date(year_int, int(month), 1)
-        if int(month) == 12:
-            month_end = date(year_int + 1, 1, 1) - timedelta(days=1)
-        else:
-            month_end = date(year_int, int(month) + 1, 1) - timedelta(days=1)
-        
-        # List all days in the month
+        month_start = date(year_int, month_int, 1)
         total_days = (month_end - month_start).days + 1
         all_dates = [month_start + timedelta(days=i) for i in range(total_days)]
         
@@ -686,6 +702,13 @@ def payroll_processing(request):
             present_days = attendance_records.filter(status='P').count()
             absent_days = attendance_records.filter(status='A').count()
             leave_days = attendance_records.filter(status__in=['L', 'ML', 'PL']).count()
+
+            # Prorate salary based on attendance
+            ratio = Decimal(present_days) / Decimal(working_days) if working_days > 0 else Decimal('0')
+            if ratio < 0:
+                ratio = Decimal('0')
+            if ratio > 1:
+                ratio = Decimal('1')
             
             payroll_record, created = PayrollRecord.objects.update_or_create(
                 employee=employee,
@@ -695,16 +718,16 @@ def payroll_processing(request):
                     'present_days': present_days,
                     'absent_days': absent_days,
                     'leave_days': leave_days,
-                    'basic_salary': salary_structure.basic_salary,
-                    'hra': salary_structure.hra,
-                    'dearness_allowance': salary_structure.dearness_allowance,
-                    'conveyance': salary_structure.conveyance,
-                    'medical_allowance': salary_structure.medical_allowance,
-                    'other_allowances': salary_structure.other_allowances,
-                    'pf_contribution': salary_structure.pf_contribution,
-                    'esi_contribution': salary_structure.esi_contribution,
-                    'income_tax': salary_structure.income_tax,
-                    'other_deductions': salary_structure.other_deductions,
+                    'basic_salary': salary_structure.basic_salary * ratio,
+                    'hra': salary_structure.hra * ratio,
+                    'dearness_allowance': salary_structure.dearness_allowance * ratio,
+                    'conveyance': salary_structure.conveyance * ratio,
+                    'medical_allowance': salary_structure.medical_allowance * ratio,
+                    'other_allowances': salary_structure.other_allowances * ratio,
+                    'pf_contribution': salary_structure.pf_contribution * ratio,
+                    'esi_contribution': salary_structure.esi_contribution * ratio,
+                    'income_tax': salary_structure.income_tax * ratio,
+                    'other_deductions': salary_structure.other_deductions * ratio,
                 }
             )
             
