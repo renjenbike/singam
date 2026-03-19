@@ -811,9 +811,27 @@ def employee_salary_structure(request):
         from django.contrib import messages
         messages.info(request, 'Your salary structure has not been created yet. Please contact the admin.')
     
+    # Get current month's total days
+    from django.utils import timezone
+    from decimal import Decimal
+    import calendar
+    
+    today = timezone.now()
+    total_days_in_month = calendar.monthrange(today.year, today.month)[1]
+    
+    # Calculate net salary if salary structure exists
+    net_salary = Decimal('0')
+    daily_salary = Decimal('0')
+    if salary_structure:
+        net_salary = Decimal(str(salary_structure.gross_salary)) - Decimal(str(salary_structure.total_deductions))
+        daily_salary = net_salary / Decimal(str(total_days_in_month))
+    
     context = {
         'employee': employee,
         'salary_structure': salary_structure,
+        'net_salary': net_salary,
+        'daily_salary': daily_salary,
+        'total_days_in_month': total_days_in_month,
     }
     return render(request, 'gate/employee_salary_structure.html', context)
 

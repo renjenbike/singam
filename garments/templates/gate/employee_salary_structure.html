@@ -54,6 +54,10 @@
                                 <td><strong>Gross Salary (Monthly)</strong></td>
                                 <td class="text-end"><strong>₹{{ salary_structure.gross_salary|floatformat:2 }}</strong></td>
                             </tr>
+                            <tr>
+                                <td><small class="text-muted">Gross = Basic + All Allowances</small></td>
+                                <td></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -86,6 +90,10 @@
                                 <td><strong>Total Deductions</strong></td>
                                 <td class="text-end"><strong>₹{{ salary_structure.total_deductions|floatformat:2 }}</strong></td>
                             </tr>
+                            <tr class="table-warning">
+                                <td><strong>Net Salary (Gross - Deductions)</strong></td>
+                                <td class="text-end"><strong>₹{{ net_salary|floatformat:2 }}</strong></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -96,16 +104,13 @@
                 <div class="alert alert-primary" role="alert">
                     <h5 class="mb-2">Daily Salary Calculation</h5>
                     <p class="mb-0">
-                        <strong>Daily Salary = Gross Salary ÷ 30</strong><br>
-                        <strong>Daily Salary = ₹{{ salary_structure.gross_salary|floatformat:2 }} ÷ 30 = ₹{% widthratio salary_structure.gross_salary 30 1 %}</strong>
+                        <strong>Daily Salary = Net Salary ÷ Total Calendar Days</strong><br>
+                        <strong>Daily Salary = ₹{{ net_salary|floatformat:2 }} ÷ {{ total_days_in_month }} = ₹{{ daily_salary|floatformat:2 }}</strong>
                     </p>
+                    <p class="mb-0 mt-2 small text-muted"><i class="fas fa-info-circle"></i> Calculated for current month ({{ total_days_in_month }} days)</p>
                 </div>
 
-                <div class="mt-4">
-                    <a href="{% url 'employee_daily_salary_slips' %}" class="btn btn-primary">
-                        <i class="fas fa-file-invoice-dollar"></i> View Daily Salary Slips
-                    </a>
-                </div>
+
 
             </div>
         </div>

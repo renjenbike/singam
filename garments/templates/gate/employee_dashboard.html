@@ -161,56 +161,6 @@
 
 <!-- Main Content Row -->
 <div class="row">
-    <!-- Daily Salary Slips -->
-    <div class="col-lg-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-file-invoice-dollar"></i> Recent Daily Salary Slips
-            </div>
-            <div class="card-body">
-                {% if monthly_salary_slips %}
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Daily Salary</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for slip in monthly_salary_slips|dictsort:"-date"|slice:":5" %}
-                                <tr>
-                                    <td><strong>{{ slip.date|date:"d M" }}</strong></td>
-                                    <td>
-                                        {% if slip.attendance %}
-                                            {% if slip.attendance.status == 'P' %}
-                                                <span class="badge bg-success">Present</span>
-                                            {% elif slip.attendance.status == 'A' %}
-                                                <span class="badge bg-danger">Absent</span>
-                                            {% else %}
-                                                <span class="badge bg-warning">{{ slip.attendance.get_status_display }}</span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="badge bg-secondary">N/A</span>
-                                        {% endif %}
-                                    </td>
-                                    <td><strong class="text-success">₹{{ slip.daily_salary|floatformat:2 }}</strong></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <a href="{% url 'employee_daily_salary_slips' %}" class="btn btn-sm btn-primary mt-3">
-                        <i class="fas fa-arrow-right"></i> View All Daily Slips
-                    </a>
-                {% else %}
-                    <p class="text-muted text-center py-3">No daily salary slips yet. Check in to earn daily salary!</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
     <!-- Pending Leaves -->
     <div class="col-lg-6">
         <div class="card mb-4">
